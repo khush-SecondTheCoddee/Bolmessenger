@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DISTRIBUTOR
+  ARTIST
+  LISTENER
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SongStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  password      String
+  name          String
+  displayName   String?
+  role          UserRole
+  status        UserStatus  @default(PENDING)
+  createdById   String?
+  createdBy     User?       @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers  User[]      @relation("UserCreatedBy")
+  uploadedSongs Song[]      @relation("SongUploader")
+  artistSongs   Song[]      @relation("SongArtist")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Song {
+  id            String      @id @default(cuid())
+  title         String
+  artistId      String
+  artist        User        @relation("SongArtist", fields: [artistId], references: [id])
+  albumName     String?
+  duration      Int
+  fileUrl       String
+  coverUrl      String?
+  status        SongStatus  @default(PENDING)
+  uploadedById  String
+  uploadedBy    User        @relation("SongUploader", fields: [uploadedById], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
